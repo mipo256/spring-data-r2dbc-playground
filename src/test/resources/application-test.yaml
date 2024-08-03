@@ -1,0 +1,14 @@
+logging:
+  level:
+    io:
+      r2dbc:
+        spi:
+          ConnectionFactory: DEBUG
+    org:
+      springframework:
+        r2dbc: DEBUG
+        data:
+          r2dbc:
+            core:
+              DatabaseClient: DEBUG
+              DefaultDatabaseClient: DEBUG
