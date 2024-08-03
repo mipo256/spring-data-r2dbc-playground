@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS orders(
+  id BIGSERIAL PRIMARY KEY,
+  type TEXT,
+  status TEXT,
+  created_at TIMESTAMPTZ
+);

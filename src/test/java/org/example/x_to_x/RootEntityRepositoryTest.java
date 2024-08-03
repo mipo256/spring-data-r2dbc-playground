@@ -7,7 +7,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.r2dbc.connection.init.ScriptUtils;
@@ -26,9 +25,6 @@ public class RootEntityRepositoryTest extends AbstractIntegrationTest {
   @Autowired
   private ReactiveCrudRepository<RootEntity, Long> repository;
 
-  /**
-   * provided by {@link R2dbcAutoConfiguration} internals
-   */
   @Autowired
   private ConnectionFactory connectionFactory;
 
