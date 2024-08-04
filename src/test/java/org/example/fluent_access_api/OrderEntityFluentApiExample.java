@@ -65,7 +65,9 @@ public class OrderEntityFluentApiExample extends AbstractIntegrationTest {
                     .sort(Sort.unsorted())
             )
             .one()
-    ).expectNextMatches(order -> order.getType() == OrderType.OFFLINE && order.getStatus() == OrderStatus.DELIVERED);
+    )
+        .expectNextMatches(order -> order.getType() == OrderType.OFFLINE && order.getStatus() == OrderStatus.DELIVERED)
+        .verifyComplete();
   }
 
   @NotNull

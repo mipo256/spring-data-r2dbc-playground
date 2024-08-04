@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS pagination_entity(
+  ID BIGSERIAL PRIMARY KEY,
+  type TEXT,
+  created_at TIMESTAMPTZ
+);
