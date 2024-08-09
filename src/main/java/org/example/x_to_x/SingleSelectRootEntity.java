@@ -12,7 +12,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @Data
 @Accessors(chain = true)
 @Table("single_select_root_entity")
-public class RootEntity {
+public class SingleSelectRootEntity {
 
   @Id
   private Long id;

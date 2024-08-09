@@ -20,10 +20,10 @@ import reactor.test.StepVerifier;
  * <a href="https://github.com/spring-projects/spring-framework/issues/27485">there is a ticket for this</a>, but for now we
  * can stick with {@link org.springframework.r2dbc.connection.init.ScriptUtils}
  */
-public class RootEntityRepositoryTest extends AbstractIntegrationTest {
+public class SingleSelectRootEntityRepositoryTest extends AbstractIntegrationTest {
 
   @Autowired
-  private ReactiveCrudRepository<RootEntity, Long> repository;
+  private ReactiveCrudRepository<SingleSelectRootEntity, Long> repository;
 
   @Autowired
   private ConnectionFactory connectionFactory;
@@ -44,7 +44,7 @@ public class RootEntityRepositoryTest extends AbstractIntegrationTest {
   void testLoadingWithTwoSelectStatements() {
     // given.
     StepVerifier
-        .create(repository.save(new RootEntity().setType("SomeValue")))
+        .create(repository.save(new SingleSelectRootEntity().setType("SomeValue")))
         .expectErrorMatches(throwable ->
             throwable instanceof IllegalArgumentException && throwable.getMessage().contains("Unsupported array type"))
         .verify();

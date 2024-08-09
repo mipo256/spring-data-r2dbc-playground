@@ -1,4 +1,4 @@
-package org.example.x_to_x;
+package org.example.loading_relations;
 
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 

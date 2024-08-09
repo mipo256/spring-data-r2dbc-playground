@@ -2,6 +2,7 @@ package org.example.fluent_access_api;
 
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
+import java.util.Objects;
 import org.example.AbstractIntegrationTest;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -22,6 +23,9 @@ public class OrderEntityFluentApiExample extends AbstractIntegrationTest {
 
   @Autowired
   private R2dbcEntityTemplate r2dbcEntityTemplate;
+
+  @Autowired
+  private OrderRepository orderRepository;
 
   @Autowired
   private ConnectionFactory connectionFactory;
@@ -68,6 +72,29 @@ public class OrderEntityFluentApiExample extends AbstractIntegrationTest {
     )
         .expectNextMatches(order -> order.getType() == OrderType.OFFLINE && order.getStatus() == OrderStatus.DELIVERED)
         .verifyComplete();
+  }
+
+  @Test
+  void testSwitchOnEmpty_NoValue() {
+    long nonExistentID = 432L;
+    StepVerifier.create(orderRepository
+        .findById(((long) Integer.MAX_VALUE))
+        .switchIfEmpty(
+            Mono.justOrEmpty(new Order().setId(nonExistentID))
+        )
+    ).expectNextMatches(order -> order.getId() == nonExistentID).verifyComplete();
+  }
+
+  @Test
+  void testSwitchOnEmpty_RecordFound() {
+    long nonExistentID = 432L;
+    Order savedOrder = insertOneOrder().block();
+    StepVerifier.create(orderRepository
+        .findById(savedOrder.getId())
+        .switchIfEmpty(
+            Mono.justOrEmpty(new Order().setId(nonExistentID))
+        )
+    ).expectNextMatches(order -> Objects.equals(order.getId(), savedOrder.getId())).verifyComplete();
   }
 
   @NotNull
