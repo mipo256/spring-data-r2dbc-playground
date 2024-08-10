@@ -1,5 +1,6 @@
 package org.example.loading_relations;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -17,4 +18,8 @@ public class RootEntity {
 
   @Transient
   private List<ChildEntity> children;
+
+  public List<ChildEntity> getChildren() {
+    return  children == null ? new ArrayList<>() : children;
+  }
 }

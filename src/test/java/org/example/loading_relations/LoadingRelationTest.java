@@ -11,9 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.r2dbc.connection.init.ScriptUtils;
-import reactor.core.publisher.Flux;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 public class LoadingRelationTest extends AbstractIntegrationTest {
@@ -26,6 +25,9 @@ public class LoadingRelationTest extends AbstractIntegrationTest {
 
   @Autowired
   private ConnectionFactory connectionFactory;
+
+  @Autowired
+  private TransactionalOperator transactionalOperator;
 
   @BeforeEach
   void setUp() {
@@ -42,29 +44,35 @@ public class LoadingRelationTest extends AbstractIntegrationTest {
   @Test
   void loadingRootWithRelations() {
     String name = "SomeName";
-    RootEntity rootEntity = rootEntityRepository.save(new RootEntity().setName(name)).block();
-
-    childEntityRepository.saveAll(
-        List.of(
-            new ChildEntity().setRootEntityId(rootEntity.getId()),
-            new ChildEntity().setRootEntityId(rootEntity.getId()),
-            new ChildEntity().setRootEntityId(rootEntity.getId())
-        )
+    ChildEntity lastChildInChain = transactionalOperator.execute(status ->
+        rootEntityRepository
+            .save(new RootEntity().setName(name))
+            .flux()
+            .flatMap(saved -> childEntityRepository.saveAll(
+                List.of(
+                    new ChildEntity().setRootEntityId(saved.getId()),
+                    new ChildEntity().setRootEntityId(saved.getId()),
+                    new ChildEntity().setRootEntityId(saved.getId())
+                )
+            ).doOnNext(childEntity -> {
+              saved.getChildren().add(childEntity);
+            }))
     ).blockLast(); // fine in tests
 
     StepVerifier
         .create(
             rootEntityRepository
-                .findById(rootEntity.getId())
-                .zipWith(childEntityRepository.findByRootEntityId(rootEntity.getId()).collectList())
+                .findById(lastChildInChain.getRootEntityId())
+                .zipWith(childEntityRepository.findByRootEntityId(lastChildInChain.getRootEntityId()).collectList())
                 .map(tuple -> {
                   RootEntity root = tuple.getT1();
                   root.setChildren(tuple.getT2());
                   return root;
                 })
+                .as(transactionalOperator::transactional)
         )
         .expectNextMatches(re ->
-            Objects.equals(re.getId(), rootEntity.getId()) &&
+            Objects.equals(re.getId(), lastChildInChain.getRootEntityId()) &&
             Objects.equals(re.getName(), name) &&
             Objects.equals(re.getChildren().size(), 3)
         )
