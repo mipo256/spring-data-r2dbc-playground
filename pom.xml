@@ -21,6 +21,14 @@
   </properties>
 
   <dependencies>
+    <!--
+    This dependency below is a workaround for newer IntelliJ Versions bug:
+    https://youtrack.jetbrains.com/issue/IDEA-281991/NoClassDefFoundError-org-junit-platform-launcher-TestIdentifier-when-trying-to-run-test-in-Docker
+       -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>

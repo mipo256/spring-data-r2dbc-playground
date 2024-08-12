@@ -5,6 +5,7 @@ import io.r2dbc.spi.ConnectionFactory;
 import java.util.List;
 import java.util.Objects;
 import org.example.AbstractIntegrationTest;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,20 +45,7 @@ public class LoadingRelationTest extends AbstractIntegrationTest {
   @Test
   void loadingRootWithRelations() {
     String name = "SomeName";
-    ChildEntity lastChildInChain = transactionalOperator.execute(status ->
-        rootEntityRepository
-            .save(new RootEntity().setName(name))
-            .flux()
-            .flatMap(saved -> childEntityRepository.saveAll(
-                List.of(
-                    new ChildEntity().setRootEntityId(saved.getId()),
-                    new ChildEntity().setRootEntityId(saved.getId()),
-                    new ChildEntity().setRootEntityId(saved.getId())
-                )
-            ).doOnNext(childEntity -> {
-              saved.getChildren().add(childEntity);
-            }))
-    ).blockLast(); // fine in tests
+    ChildEntity lastChildInChain = insertRootWithRelations(name);
 
     StepVerifier
         .create(
@@ -77,5 +65,36 @@ public class LoadingRelationTest extends AbstractIntegrationTest {
             Objects.equals(re.getChildren().size(), 3)
         )
         .verifyComplete();
+  }
+
+  @Test
+  void testDeletionTheRightWay() {
+    ChildEntity child = insertRootWithRelations("SomeName");
+
+    StepVerifier
+        .create(childEntityRepository
+            .deleteAllByRootEntityId(child.getRootEntityId())
+            .flatMap(c -> rootEntityRepository.deleteById(child.getRootEntityId()))
+            .as(transactionalOperator::transactional)
+        )
+        .verifyComplete();
+  }
+
+  private @Nullable ChildEntity insertRootWithRelations(String name) {
+    ChildEntity lastChildInChain = transactionalOperator.execute(status ->
+        rootEntityRepository
+            .save(new RootEntity().setName(name))
+            .flux()
+            .flatMap(saved -> childEntityRepository.saveAll(
+                List.of(
+                    new ChildEntity().setRootEntityId(saved.getId()),
+                    new ChildEntity().setRootEntityId(saved.getId()),
+                    new ChildEntity().setRootEntityId(saved.getId())
+                )
+            ).doOnNext(childEntity -> {
+              saved.getChildren().add(childEntity);
+            }))
+    ).blockLast(); // fine in tests
+    return lastChildInChain;
   }
 }
